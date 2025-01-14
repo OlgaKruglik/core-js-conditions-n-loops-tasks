@@ -407,29 +407,34 @@ function rotateMatrix(matrix) {
  *  [-2, 9, 5, -3]  => [-3, -2, 5, 9]
  */
 function sortByAsc(arr) {
-  function merge(left, right) {
-    const result = [];
-    let leftIndex = 0;
-    let rightIndex = 0;
-    while (leftIndex < left.length && rightIndex < right.length) {
-      if (left[leftIndex] < right[rightIndex]) {
-        result.push(left[leftIndex]);
-        leftIndex += 1;
-      } else {
-        result.push(right[rightIndex]);
-        rightIndex += 1;
+  function partition(left, right) {
+    const pivot = arr[Math.floor((left + right) / 2)];
+    let i = left;
+    let j = right;
+
+    while (i <= j) {
+      while (arr[i] < pivot) i += 1;
+      while (arr[j] > pivot) j -= 1;
+      if (i <= j) {
+        const arr1 = [];
+        [arr1[i], arr1[j]] = [arr[j], arr[i]];
+        i += 1;
+        j -= 1;
       }
     }
-    return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+    return i;
   }
-  function mergeSort(array) {
-    if (array.length <= 1) return array;
-    const mid = Math.floor(array.length / 2);
-    const left = mergeSort(array.slice(0, mid));
-    const right = mergeSort(array.slice(mid));
-    return merge(left, right);
+
+  function quickSort(left, right) {
+    if (left < right) {
+      const pivotIndex = partition(left, right);
+      quickSort(left, pivotIndex - 1);
+      quickSort(pivotIndex, right);
+    }
   }
-  return mergeSort(arr);
+
+  quickSort(0, arr.length - 1);
+  return arr;
 }
 
 /**
@@ -450,39 +455,32 @@ function sortByAsc(arr) {
  *  'qwerty', 3 => 'qetwry' => 'qtrewy' => 'qrwtey'
  */
 function shuffleChar(str, iterations) {
-  const len = str.length;
-  if (len <= 1 || iterations === 0) return str;
+  const { length } = str;
+  const original = str;
+  let result = str;
+  let period = 0;
+  const shuffle = (input) => {
+    let evenChars = '';
+    let oddChars = '';
+    for (let i = 0; i < length; i += 1) {
+      if (i % 2 === 0) evenChars += input.charAt(i);
+      else oddChars += input.charAt(i);
+    }
+    return evenChars + oddChars;
+  };
 
-  // Precompute the final position for each character after all iterations.
-  const finalPos = [];
-  for (let i = 0; i < len; i += 1) finalPos[i] = i;
-
-  const visited = [];
-  for (let i = 0; i < len; i += 1) visited[i] = false;
-
-  for (let start = 0; start < len; start += 1) {
-    if (!visited[start]) {
-      let current = start;
-      const indices = [];
-
-      while (!visited[current]) {
-        visited[current] = true;
-        indices.push(current);
-        current = current % 2 === 0 ? current / 2 : len / 2 + (current - 1) / 2;
-      }
-
-      const indicesLen = indices.length;
-      for (let j = 0; j < indicesLen; j += 1) {
-        const newPos = indices[(j + iterations) % indicesLen];
-        finalPos[newPos] = indices[j];
-      }
+  do {
+    result = shuffle(result);
+    period += 1;
+  } while (result !== original && period < iterations);
+  if (period < iterations) {
+    const remainingIterations = iterations % period;
+    result = original;
+    for (let i = 0; i < remainingIterations; i += 1) {
+      result = shuffle(result);
     }
   }
 
-  let result = '';
-  for (let i = 0; i < len; i += 1) {
-    result += str[finalPos[i]];
-  }
   return result;
 }
 
